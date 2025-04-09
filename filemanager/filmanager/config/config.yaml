@@ -1,0 +1,5 @@
+env: "local"
+root-path: "./root"
+grpc:
+  port: "20201"
+  timeout: "10s"
