@@ -1,0 +1,25 @@
+version: '3'
+services:
+  filemanager:
+    container_name: filemanager
+    build: ./filemanager/filmanager/
+    ports: 
+      - 20201:20201
+    environment: 
+      - CONFIG_PATH=./config/config.yaml
+    volumes:
+      - ./root-dir:/app/root-dir 
+    networks:
+      - app-net
+
+  gateway:
+    container_name: gateway
+    build: ./gateway/
+    ports:
+      - 20202:20202
+    networks:
+      - app-net
+  
+networks:
+  app-net:
+    driver: bridge
