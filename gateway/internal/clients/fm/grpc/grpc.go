@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
+	"lab3/internal/lib/logger/sl"
+	"log/slog"
+	"path/filepath"
+	"time"
+
 	filemanagerv1 "github.com/IlianBuh/fmProto/gen/go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -11,12 +18,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"io"
-	"io/fs"
-	"lab3/internal/lib/logger/sl"
-	"log/slog"
-	"path/filepath"
-	"time"
 )
 
 const (
@@ -58,7 +59,7 @@ func New(
 	}
 
 	cc, err := grpc.NewClient(
-		"localhost:"+addr,
+		"filemanager:"+addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(InterceptorLogger(log), logOpts...),

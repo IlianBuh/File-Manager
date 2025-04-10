@@ -2,7 +2,7 @@ env: "local" # "dev", "prod"
 fm-port: "20201"
 retries-count: 5
 http-server:
-  address: "localhost"
+  address: "gateway"
   timeout: 10s
   port: "20202"
   idle-timeout: 60s
