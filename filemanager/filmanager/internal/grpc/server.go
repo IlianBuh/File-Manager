@@ -3,6 +3,7 @@ package grpcfm
 import (
 	"context"
 	"errors"
+
 	"github.com/IlianBuh/filemanager-server/internal/grpc/wrappers"
 	"github.com/IlianBuh/filemanager-server/internal/services/filemanager"
 	filemanagerv1 "github.com/IlianBuh/fmProto/gen/go"
@@ -68,6 +69,9 @@ func (s *serverAPI) PostFile(
 	],
 ) error {
 
+	defer func() {
+		stream.SendAndClose(nil)
+	}()
 	err := s.fm.PostFile(
 		context.Background(),
 		&wrappers.MyPostFileProvider{Stream: stream},
@@ -85,7 +89,6 @@ func (s *serverAPI) PostFile(
 		return status.Error(codes.Internal, "failed to save file")
 	}
 
-	stream.SendAndClose(nil)
 	return nil
 }
 
@@ -96,7 +99,7 @@ func (s *serverAPI) DeleteFile(
 
 	err := s.fm.DeleteFile(ctx, req.GetFileName())
 	if err != nil {
-		if errors.Is(filemanager.ErrBadRequest, err) {
+		if errors.Is(err, filemanager.ErrBadRequest) {
 			return nil, status.Error(codes.InvalidArgument, "file not found")
 		}
 
@@ -109,7 +112,7 @@ func (s *serverAPI) DeleteFile(
 func (s *serverAPI) PutFile(
 	stream grpc.ClientStreamingServer[filemanagerv1.PutFileRequest, filemanagerv1.PutFileResponse],
 ) error {
-	err := s.fm.PostFile(
+	err := s.fm.PutFile(
 		context.Background(),
 		&wrappers.MyPutFileProvider{Stream: stream},
 	)

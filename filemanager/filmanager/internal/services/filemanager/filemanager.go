@@ -187,7 +187,7 @@ func (f *FileManager) PostFile(
 	filepath = req.GetFileName()
 	if _, err = f.root.Stat(filepath); err == nil {
 		log.Warn("trying to create file with existing file name")
-		return ErrBadRequest
+		return fmt.Errorf("%s: %w", op, ErrBadRequest)
 	}
 
 	file, err = f.root.Create(filepath)
@@ -289,6 +289,8 @@ func (f *FileManager) DeleteFile(
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, ErrInternal)
 	}
+
+	log.Info("deleted file")
 	return nil
 }
 
@@ -337,7 +339,7 @@ func (f *FileManager) PutFile(
 		return fmt.Errorf("%s: %w", op, ErrBadRequest)
 	}
 
-	file, err = f.root.OpenFile(filepath, os.O_WRONLY, stat.Mode())
+	file, err = f.root.Create(filepath)
 	if err != nil {
 		var pathError *fs.PathError
 		if errors.As(err, &pathError) {
