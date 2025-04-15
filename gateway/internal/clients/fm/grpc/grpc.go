@@ -59,7 +59,7 @@ func New(
 	}
 
 	cc, err := grpc.NewClient(
-		"filemanager:"+addr,
+		"localhost:"+addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(InterceptorLogger(log), logOpts...),
@@ -162,6 +162,7 @@ func (c *Client) DeleteFile(ctx context.Context, filename string) (err error) {
 }
 
 func (c *Client) PostFile(ctx context.Context, data DataProvider, header DataHeader, filename string) (err error) {
+
 	const op = "grpclient.PostFile"
 	log := c.log.With(slog.String("op", op))
 	log.Info("uploading file",
@@ -183,10 +184,6 @@ func (c *Client) PostFile(ctx context.Context, data DataProvider, header DataHea
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	defer func() {
-		if _, err := stream.CloseAndRecv(); err != nil {
-			log.Error("failed to close api stream", sl.Err(err))
-		}
-
 		if err := data.Close(); err != nil {
 			log.Error("failed to close data provider", sl.Err(err))
 		}
@@ -207,6 +204,7 @@ func (c *Client) PostFile(ctx context.Context, data DataProvider, header DataHea
 		read, err = data.Read(chunk)
 		if err != nil {
 			log.Error("failed to read file", sl.Err(err))
+			_, _ = stream.CloseAndRecv()
 			return fmt.Errorf("%s: %w", op, err)
 		}
 
@@ -217,11 +215,16 @@ func (c *Client) PostFile(ctx context.Context, data DataProvider, header DataHea
 			},
 		)
 		if err != nil {
-			log.Error("failed to send chunk", sl.Err(err))
-			return fmt.Errorf("%s: %w", op, err)
+			log.Warn("failed to send chunk", sl.Err(err))
+			break
 		}
 
 		sent += int64(read)
+	}
+
+	if _, err = stream.CloseAndRecv(); err != nil {
+		log.Error("failed to close api stream", sl.Err(err))
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("successfully sent file")

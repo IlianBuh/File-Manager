@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultCfgPath = "C:\\BSUIR\\KSiS\\lab3\\gateaway\\config\\config.yaml"
+	defaultCfgPath = "C:\\BSUIR\\KSiS\\lab3\\gateway\\config\\config.yaml"
 )
 
 type Config struct {
